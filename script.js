@@ -1,5 +1,7 @@
 const gameContainer = document.getElementById("game");
 
+let activelyFlippedCards = [];
+
 const COLORS = [
   "red",
   "blue",
@@ -59,8 +61,41 @@ function createDivsForColors(colorArray) {
 
 // TODO: Implement this function!
 function handleCardClick(event) {
-  // you can use event.target to see which element was clicked
-  console.log("you just clicked", event.target);
+
+  // check if more than 2 cards have been clicked since "reset"
+  if (activelyFlippedCards.length >= 2) {
+    return;
+  }
+
+  // do nothing if card is already matched (or active)
+  if (event.target.style.backgroundColor)
+    return;
+
+  // change card background to class color
+  event.target.style.backgroundColor = event.target.className;
+  activelyFlippedCards.push(event.target);
+
+  if (activelyFlippedCards.length == 2) {
+
+    // if it's the same card, reset
+    if (activelyFlippedCards[0] === activelyFlippedCards[1]) {
+      activelyFlippedCards.pop();
+    }
+
+    // if two cards are match
+    if (activelyFlippedCards[0].className === activelyFlippedCards[1].className) {
+      // leave up
+      activelyFlippedCards = [];
+    }
+    else {
+      // else leave up for 1 second and reset
+      setTimeout(() => {
+        activelyFlippedCards[0].style.backgroundColor = "";
+        activelyFlippedCards[1].style.backgroundColor = "";
+        activelyFlippedCards = [];
+      }, 1000);
+    }
+  }
 }
 
 // when the DOM loads
