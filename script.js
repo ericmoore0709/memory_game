@@ -1,6 +1,10 @@
 const gameContainer = document.getElementById("game");
 
 let activelyFlippedCards = [];
+let attemptCount = 0;
+let started = false;
+let ended = false;
+let matchCount = 0;
 
 const COLORS = [
   "red",
@@ -14,6 +18,8 @@ const COLORS = [
   "orange",
   "purple"
 ];
+
+let totalMatches = COLORS.length / 2;
 
 // here is a helper function to shuffle an array
 // it returns the same array with values shuffled
@@ -37,8 +43,6 @@ function shuffle(array) {
 
   return array;
 }
-
-let shuffledColors = shuffle(COLORS);
 
 // this function loops over the array of colors
 // it creates a new div and gives it a class with the value of the color
@@ -82,10 +86,35 @@ function handleCardClick(event) {
       activelyFlippedCards.pop();
     }
 
+    // increment attempt count
+    document.getElementById("attempt_display").innerText = `Attempts: ${++attemptCount}`;
+
+
     // if two cards are match
     if (activelyFlippedCards[0].className === activelyFlippedCards[1].className) {
       // leave up
       activelyFlippedCards = [];
+
+      // increment match count
+      matchCount++;
+
+      // check for win
+      if (matchCount >= totalMatches) {
+        // game end
+        ended = true;
+
+        // display score or whatever
+        const displayScore = document.createElement("p");
+        displayScore.innerText = `You won in ${attemptCount} tries!`;
+        document.body.appendChild(displayScore);
+
+        // save "high" score
+        const highScore = localStorage.getItem("best");
+        if (!highScore || attemptCount < highScore) {
+          localStorage.setItem("best", attemptCount);
+          document.getElementById("highscore_display").innerText = `High score: ${attemptCount}`;
+        }
+      }
     }
     else {
       // else leave up for 1 second and reset
@@ -98,5 +127,57 @@ function handleCardClick(event) {
   }
 }
 
-// when the DOM loads
-createDivsForColors(shuffledColors);
+const highScore = localStorage.getItem("best");
+
+const highScoreDisplay = document.createElement("p");
+highScoreDisplay.id = "highscore_display";
+highScoreDisplay.innerText = (highScore) ? `High score: ${highScore}` : `No high score!`;
+document.body.appendChild(highScoreDisplay)
+
+document.getElementById("start_game").addEventListener("click", () => {
+
+  if (ended) return;
+
+  if (!started) {
+    // start the game 
+    createDivsForColors(shuffle(COLORS));
+
+    // add attempt count display
+    const attemptCountDisplay = document.createElement("p")
+    attemptCountDisplay.id = "attempt_display";
+    attemptCountDisplay.innerText = `Attempts: ${attemptCount}`;
+    document.body.appendChild(attemptCountDisplay);
+
+    // re-append high score display
+    const tempHighScoreDisplay = document.getElementById("highscore_display").cloneNode(true);
+    document.body.removeChild(document.getElementById("highscore_display"));
+    document.body.appendChild(tempHighScoreDisplay);
+
+    started = true;
+  }
+});
+
+document.getElementById("reset_game").addEventListener("click", () => {
+
+  if (started && ended) {
+    // clear the pre-existing game
+    while (gameContainer.lastChild)
+      gameContainer.removeChild(gameContainer.lastChild);
+
+    // create new game
+    createDivsForColors(shuffle(COLORS));
+
+    // reset attempts and matches
+    attemptCount = 0;
+    matchCount = 0;
+
+    // reset displays
+    document.getElementById("attempt_display").innerText = `Attempts: ${attemptCount}`;
+    document.body.removeChild(document.body.lastChild);
+
+    // update game ended status flag
+    ended = false;
+  }
+});
+
+
